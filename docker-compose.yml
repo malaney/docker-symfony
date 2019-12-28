@@ -7,6 +7,8 @@ services:
             - 6379:6379
         volumes_from:
             - php
+        volumes:
+            - ./redis:/data
     db:
         image: mysql
         volumes:
@@ -25,6 +27,9 @@ services:
         volumes:
             - ${SYMFONY_APP_PATH}:/var/www/symfony
             - ./logs/symfony:/var/www/symfony/app/logs
+            - ./container-ssh-keys/authorized_keys:/root/.ssh/authorized_keys
+        ports:
+            - "22:22"
     nginx:
         build: nginx
         ports:
@@ -33,13 +38,22 @@ services:
             - php
         volumes:
             - ./logs/nginx/:/var/log/nginx
-    elk:
-        image: willdurand/elk
-        ports:
-            - 81:80
+
+    elasticsearch:
+        image: elasticsearch:2.4.4-alpine
+        ports: 
+            - 9200:9200
         volumes:
-            - ./elk/logstash:/etc/logstash
-            - ./elk/logstash/patterns:/opt/logstash/patterns
-        volumes_from:
-            - php
-            - nginx
+            - ./esdata:/usr/share/elasticsearch/data
+
+    kibana:
+        image: kibana:4.6.6
+        ports: 
+            - 5601:5601
+        restart: on-failure
+        depends_on: 
+            - elasticsearch
+        environment:
+            - ELASTICSEARCH_URL=http://elasticsearch:9200
+        
+
