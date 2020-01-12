@@ -9,7 +9,21 @@ RUN apt-get update && apt-get install -y \
     git \
     telnet \
     unzip \
-    vim
+    ssh \
+    vim \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev
+    node \
+    uglifyjs
+
+# RUN systemctl enable ssh 
+# RUN service ssh status
+# RUN mkdir /var/run/sshd
+# CMD ['/usr/sbin/sshd', '-D']
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
@@ -42,7 +56,13 @@ RUN pecl install apcu \
     && docker-php-ext-enable apcu --ini-name 10-apcu.ini \
     && docker-php-ext-enable apc  --ini-name 20-apc.ini
 
+# Install GD
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install gd
+
 RUN echo 'alias sf="php app/console"' >> ~/.bashrc \
 && echo 'alias sf3="php bin/console"' >> ~/.bashrc
 
 WORKDIR /var/www/symfony
+
+RUN service ssh start 
